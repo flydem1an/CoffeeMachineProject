@@ -7,4 +7,6 @@ coffee_app
 __pycache__/
 *.pyc
 
+coffee_server
+coffee_app
 coffee_data.json

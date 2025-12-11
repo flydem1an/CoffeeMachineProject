@@ -113,4 +113,17 @@ public:
 
         return "SUCCESS: Your " + recipe.getName() + " is ready!";
     }
+
+    json getStatusJson() {
+        return {
+            {"water", waterAmount},
+            {"coffee", coffeeAmount},
+            {"milk", milkAmount},
+            {"sugar", sugarAmount},
+            {"cups", cupsMade},
+            {"max_cups", MAX_CUPS},
+            {"is_blocked", isBlocked()}
+        };
+    }
+
 };
