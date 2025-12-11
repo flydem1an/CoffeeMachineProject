@@ -1,24 +1,53 @@
 #include <iostream>
+#include <string>
 #include "CoffeeMachine.h"
 #include "Recipe.h"
 
 using namespace std;
 
-int main() {
-    cout << "--- Starting Coffee Machine System ---" << endl;
+void showUsage() {
+    cout << "Usage: ./coffee_app [command] [sugar_amount]" << endl;
+    cout << "Commands: status, espresso, cappuccino, latte, refill, clean" << endl;
+}
 
-    CoffeeMachine myMachine;
-    
-    cout << "Current Status: " << myMachine.getStatus() << endl;
+int main(int argc, char* argv[]) {
 
-    Recipe espresso("Espresso", 50, 10, 0);       
-    Recipe cappuccino("Cappuccino", 50, 10, 100); 
+    if (argc < 2) {
+        showUsage();
+        return 1;
+    }
 
-    cout << "\nOrder: Espresso (2 sugar)..." << endl;
-    string result = myMachine.makeCoffee(espresso, 2);
-    cout << "Machine says: " << result << endl;
+    string command = argv[1];
+    CoffeeMachine machine;
 
-    cout << "Status after: " << myMachine.getStatus() << endl;
+    if (command == "status") {
+        cout << machine.getStatus() << endl;
+    }
+    else if (command == "refill") {
+        machine.refill();
+    }
+    else if (command == "clean") {
+        machine.serviceClean();
+    }
+    else if (command == "espresso" || command == "cappuccino" || command == "latte") {
+        int sugar = 0;
+        if (argc >= 3) {
+            sugar = stoi(argv[2]);
+        }
+
+        Recipe* recipe = nullptr;
+        if (command == "espresso") recipe = new Recipe("Espresso", 50, 10, 0);
+        else if (command == "cappuccino") recipe = new Recipe("Cappuccino", 50, 10, 100);
+        else if (command == "latte") recipe = new Recipe("Latte", 50, 10, 150);
+
+        if (recipe) {
+            cout << machine.makeCoffee(*recipe, sugar) << endl;
+            delete recipe;
+        }
+    } 
+    else {
+        cout << "Unknown command" << endl;
+    }
 
     return 0;
 }
