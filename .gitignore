@@ -1,0 +1,8 @@
+*.o
+*.out
+coffee_app
+
+.vscode/
+
+__pycache__/
+*.pyc
