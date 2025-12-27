@@ -6,7 +6,6 @@ import threading
 import json
 import os
 
-# --- CONFIG ---
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
 SERVER_URL = "http://localhost:8080"
@@ -24,18 +23,15 @@ class CoffeeApp(ctk.CTk):
         self.is_processing = False 
         self.custom_presets = self.load_presets() 
 
-        # === LAYOUT GRID ===
         self.grid_columnconfigure(0, weight=1) 
         self.grid_columnconfigure(1, weight=1) 
         self.grid_rowconfigure(0, weight=1)
 
-        # --- LEFT PANEL ---
         self.left_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.left_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
 
         ctk.CTkLabel(self.left_frame, text="☕ Order Panel", font=("Roboto", 24, "bold")).pack(pady=(0, 15))
 
-        # 1. Sugar at bottom
         self.sugar_frame = ctk.CTkFrame(self.left_frame)
         self.sugar_frame.pack(side="bottom", fill="x", pady=(10, 0))
         
@@ -46,7 +42,6 @@ class CoffeeApp(ctk.CTk):
         self.sugar_slider.set(1)
         self.sugar_slider.pack(pady=10, fill="x", padx=10)
 
-        # 2. Tabs expand
         self.mode_tabs = ctk.CTkTabview(self.left_frame, width=400)
         self.mode_tabs.pack(side="top", fill="both", expand=True)
         
@@ -56,7 +51,6 @@ class CoffeeApp(ctk.CTk):
         self.setup_standard_menu()
         self.setup_custom_builder()
 
-        # --- RIGHT PANEL ---
         self.right_frame = ctk.CTkFrame(self, fg_color="#2B2B2B")
         self.right_frame.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
@@ -91,7 +85,6 @@ class CoffeeApp(ctk.CTk):
 
         self.update_status_loop()
 
-    # --- SETUP UI METHODS ---
 
     def setup_standard_menu(self):
         self.menu_scroll = ctk.CTkScrollableFrame(self.tab_menu, fg_color="transparent")
@@ -110,7 +103,6 @@ class CoffeeApp(ctk.CTk):
         self.preset_separator = ctk.CTkLabel(self.menu_scroll, text="--- MY PRESETS ---", text_color="gray", font=("Arial", 10, "bold"))
         self.preset_separator.pack(pady=(20, 5))
 
-        # Контейнер для власних рецептів
         self.presets_container = ctk.CTkFrame(self.menu_scroll, fg_color="transparent")
         self.presets_container.pack(fill="x")
 
@@ -152,11 +144,9 @@ class CoffeeApp(ctk.CTk):
         """Створює рядок з кнопкою замовлення І кнопкою видалення"""
         name = preset_data["name"]
         
-        # Створюємо контейнер для одного рядка
         row_frame = ctk.CTkFrame(self.presets_container, fg_color="transparent")
         row_frame.pack(pady=5, fill="x")
 
-        # Кнопка "Зварити" (велика)
         ctk.CTkButton(row_frame, 
                       text=f"{name} - 60₴", 
                       fg_color="#5B2C6F", hover_color="#4A235A",
@@ -164,7 +154,6 @@ class CoffeeApp(ctk.CTk):
                       command=lambda: self.add_to_queue("custom", preset_data)
         ).pack(side="left", fill="x", expand=True, padx=(0, 5))
 
-        # Кнопка "Видалити" (маленька червона)
         ctk.CTkButton(row_frame,
                       text="❌",
                       width=40, height=50,
@@ -173,7 +162,6 @@ class CoffeeApp(ctk.CTk):
                       command=lambda: self.delete_preset(name, row_frame)
         ).pack(side="right")
 
-    # --- DATA PERSISTENCE & LOGIC ---
 
     def load_presets(self):
         if os.path.exists(PRESETS_FILE):
@@ -193,18 +181,12 @@ class CoffeeApp(ctk.CTk):
 
     def delete_preset(self, name_to_delete, widget_frame):
         """Видаляє рецепт зі списку і з екрану"""
-        # 1. Видаляємо зі списку даних
         self.custom_presets = [p for p in self.custom_presets if p["name"] != name_to_delete]
         
-        # 2. Оновлюємо файл
         self.save_presets_to_file()
         
-        # 3. Видаляємо кнопку з екрану (візуально)
         widget_frame.destroy()
         
-        # 4. Показуємо повідомлення (опціонально)
-        # messagebox.showinfo("Deleted", f"Preset '{name_to_delete}' removed.")
-
     def update_sugar(self, val):
         self.label_sugar.configure(text=f"Sugar: {int(val)} spoon 🍬")
 
@@ -214,7 +196,6 @@ class CoffeeApp(ctk.CTk):
             messagebox.showwarning("Info", "Please enter a recipe name!")
             return
 
-        # Перевірка на дублікати
         for p in self.custom_presets:
             if p["name"] == name:
                 messagebox.showerror("Error", "Name already exists! Choose another.")
@@ -229,7 +210,7 @@ class CoffeeApp(ctk.CTk):
         
         self.custom_presets.append(preset_data)
         self.save_presets_to_file()
-        self.create_preset_button(preset_data) # Додаємо нову кнопку з хрестиком
+        self.create_preset_button(preset_data)
 
         messagebox.showinfo("Saved", f"Recipe '{name}' saved permanently!")
         self.entry_name.delete(0, "end")
