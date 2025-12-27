@@ -3,43 +3,37 @@
 #include <fstream>
 #include <string>
 #include <nlohmann/json.hpp>
-#include "Recipe.h"
+#include "Recipes.h" 
 
 using json = nlohmann::json;
 using namespace std;
 
 class CoffeeMachine {
 private:
-    int waterAmount;
-    int coffeeAmount;
-    int milkAmount;
-    int sugarAmount;
-    
-    int cupsMade; 
-    const int MAX_CUPS = 5;
-
+    int water, coffee, milk, sugar;
+    int cupsMade;
+    double totalRevenue;
+    const int MAX_CUPS = 20;
     const string DATA_FILE = "coffee_data.json";
 
 public:
     CoffeeMachine() {
         if (!loadState()) {
-            waterAmount = 2000;
-            coffeeAmount = 500;
-            milkAmount = 1000;
-            sugarAmount = 500;
+            refill();
             cupsMade = 0;
+            totalRevenue = 0.0;
             saveState();
         }
     }
 
-    
     void saveState() {
         json j;
-        j["water"] = waterAmount;
-        j["coffee"] = coffeeAmount;
-        j["milk"] = milkAmount;
-        j["sugar"] = sugarAmount;
+        j["water"] = water;
+        j["coffee"] = coffee;
+        j["milk"] = milk;
+        j["sugar"] = sugar;
         j["cups"] = cupsMade;
+        j["revenue"] = totalRevenue;
 
         ofstream file(DATA_FILE);
         if (file.is_open()) {
@@ -53,77 +47,60 @@ public:
         if (file.is_open()) {
             json j;
             file >> j;
-            
-            waterAmount = j["water"];
-            coffeeAmount = j["coffee"];
-            milkAmount = j["milk"];
-            sugarAmount = j["sugar"];
-            cupsMade = j["cups"];
-            file.close();
+            water = j.value("water", 2000);
+            coffee = j.value("coffee", 500);
+            milk = j.value("milk", 1000);
+            sugar = j.value("sugar", 500);
+            cupsMade = j.value("cups", 0);
+            totalRevenue = j.value("revenue", 0.0);
             return true;
         }
         return false;
     }
 
-
-    string getStatus() {
-        return "Water: " + to_string(waterAmount) + "ml | Coffee: " + to_string(coffeeAmount) + 
-               "g | Milk: " + to_string(milkAmount) + "ml | Sugar: " + to_string(sugarAmount) + 
-               "g | Cups: " + to_string(cupsMade) + "/" + to_string(MAX_CUPS);
+    json getStatusJson() {
+        return {
+            {"water", water},
+            {"coffee", coffee},
+            {"milk", milk},
+            {"sugar", sugar},
+            {"cups", cupsMade},
+            {"max_cups", MAX_CUPS},
+            {"is_blocked", cupsMade >= MAX_CUPS},
+            {"revenue", totalRevenue}
+        };
     }
 
-    bool isBlocked() const {
-        return cupsMade >= MAX_CUPS;
+    void refill() {
+        water = 2000; coffee = 500; milk = 1000; sugar = 500;
+        saveState();
     }
 
     void serviceClean() {
         cupsMade = 0;
         saveState();
-        cout << "[System] Machine cleaned and ready!" << endl;
     }
 
-    void refill() {
-        waterAmount = 2000;
-        coffeeAmount = 500;
-        milkAmount = 1000;
-        sugarAmount = 500;
-        saveState();
-        cout << "[System] All resources refilled!" << endl;
-    }
+    string makeDrink(Beverage* drink, int sugarSpoons) {
+        if (cupsMade >= MAX_CUPS) return "ERROR: Machine needs cleaning!";
 
-    string makeCoffee(const Recipe& recipe, int sugarLevel) {
-        if (isBlocked()) {
-            return "ERROR: Machine is dirty! Please clean it.";
-        }
+        int totalSugarNeeded = (sugarSpoons * 5) + drink->getSugar();
 
-        int actualSugar = sugarLevel * 5;
+        if (water < drink->getWater()) return "ERROR: Not enough water";
+        if (coffee < drink->getCoffee()) return "ERROR: Not enough coffee";
+        if (milk < drink->getMilk()) return "ERROR: Not enough milk";
+        if (sugar < totalSugarNeeded) return "ERROR: Not enough sugar";
 
-        if (waterAmount < recipe.getWater()) return "ERROR: Not enough water";
-        if (coffeeAmount < recipe.getCoffee()) return "ERROR: Not enough coffee";
-        if (milkAmount < recipe.getMilk()) return "ERROR: Not enough milk";
-        if (sugarAmount < actualSugar) return "ERROR: Not enough sugar";
-
-        waterAmount -= recipe.getWater();
-        coffeeAmount -= recipe.getCoffee();
-        milkAmount -= recipe.getMilk();
-        sugarAmount -= actualSugar;
+        water -= drink->getWater();
+        coffee -= drink->getCoffee();
+        milk -= drink->getMilk();
+        sugar -= totalSugarNeeded;
+        
         cupsMade++;
+        totalRevenue += drink->getPrice();
 
         saveState();
-
-        return "SUCCESS: Your " + recipe.getName() + " is ready!";
+        
+        return "SUCCESS: " + drink->prepare(); 
     }
-
-    json getStatusJson() {
-        return {
-            {"water", waterAmount},
-            {"coffee", coffeeAmount},
-            {"milk", milkAmount},
-            {"sugar", sugarAmount},
-            {"cups", cupsMade},
-            {"max_cups", MAX_CUPS},
-            {"is_blocked", isBlocked()}
-        };
-    }
-
 };
